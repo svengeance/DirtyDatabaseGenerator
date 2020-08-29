@@ -20,3 +20,6 @@ service its purpose.
 Clone the repo, modify the arguments in `Main` to suit your needs, and run. The program will open two instances of notepad.  
 The first will drop-and-recreate the database, and all tables therein.  
 The second will create all of the rows to be inserted per-table.
+
+## Contributing
+If a suffient (and I'll be real, that bar is low) number of people find this tool useful, I would commit to formalizing it and making it something more workable for public consumption. Afterwards the project will be recognizable as a properly done tool, and from then on I can work with the community to take in issues, features, and PRs.
