@@ -1,21 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.CommandLine.DragonFruit;
 using System.CommandLine.Invocation;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices.ComTypes;
 using System.Text;
-using System.Text.Json;
 
-namespace DbScriptGenerator
+namespace DatabaseGenerator
 {
 
-    public static class Exensions
+    /// <summary>
+    /// 
+    /// </summary>
+    public static class Extensions
     {
         private static readonly Random Rand = new Random();
 
+        /// <summary>
+        /// Generates a random value from an array
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="arr"></param>
+        /// <returns></returns>
         public static T RandomValue<T>(this T[] arr)
             => arr.Length == 0 ? throw new ArgumentException("Arr can not be empty") : arr[Rand.Next(0, arr.Length)];
     }
@@ -23,33 +28,42 @@ namespace DbScriptGenerator
     {
         private static readonly Random Rand = new Random();
         private static string DatabaseName = "FatSchemaTestDatabase";
-        private static string[] ColumnTypes = { "int", "smallint", "bigint", "varchar(255)", "bit" };
+        private static readonly string[] ColumnTypes = { "int", "smallint", "bigint", "varchar(255)", "bit" };
 
         /// <summary>
-        /// Generates a DB script to fill a database with a various amount of schema
+        /// Generates a DB script to fill a database with a various amount of schema and data
         /// </summary>
-        /// <param name="numTables"></param>
-        /// <param name="numColumnsPerTable"></param>
-        /// <param name="numIndexesPerTable"></param>
-        static void Main(int numTables = 10, int numColumnsPerTable = 5, int numIndexesPerTable = 3, int numRowsOfData = 1)
+        /// <param name="numTables">Number of tables to generate</param>
+        /// <param name="numColumnsPerTable">Number of columns per table to generate</param>
+        /// <param name="numIndexesPerTable">Number of indexes per table to generate</param>
+        /// <param name="numRowsOfData">Number of rows of data per table to generate</param>
+        private static void Main(int numTables = 10, int numColumnsPerTable = 5, int numIndexesPerTable = 3, int numRowsOfData = 1)
         {
             var names = new NameGenerator().RandomNames();
 
-            var generated_tables = names.Take(numTables)
-                                        .Select(tableName => (tableName, GenerateTable(tableName, numColumnsPerTable, numIndexesPerTable, names)))
-                                        .Select(s => new { s.tableName, s.Item2.columnTypes, s.Item2.columnNames, tableScript = s.Item2.table })
-                                        .ToList();
+            var generationData
+                = names.Take(numTables)
+                       .Select(tableName =>(tableName, tableCreationDetails: GenerateTable(tableName, numColumnsPerTable, numIndexesPerTable, names)))
+                       .Select(s => new
+                        {
+                            s.tableName,
+                            s.tableCreationDetails.columnTypes,
+                            s.tableCreationDetails.columnNames,
+                            tableScript = s.tableCreationDetails.table
+                        })
+                       .ToList();
 
-            var creationString = new StringBuilder().AppendLine(GenerateCheckDropCreateDatabase())
-                                                    .AppendJoin(Environment.NewLine, generated_tables.Select(s => s.tableScript)).ToString();
+            var databaseAndTableCreationString
+                = new StringBuilder().AppendLine(GenerateCheckDropCreateDatabase())
+                                     .AppendJoin(Environment.NewLine, generationData.Select(s => s.tableScript)).ToString();
 
             var tableCreation = Path.GetTempFileName();
             var dataSeed = Path.GetTempFileName();
 
-            File.WriteAllText(tableCreation, creationString);
+            File.WriteAllText(tableCreation, databaseAndTableCreationString);
 
             int chunkSize = Convert.ToInt32(Math.Floor((double)numRowsOfData / numColumnsPerTable));
-            foreach (var generatedSet in generated_tables)
+            foreach (var generatedSet in generationData)
             {
                 var numLoopedIterations = chunkSize == 0 ? 0 : numRowsOfData / chunkSize;
                 for (int i = 0; i < numLoopedIterations; i++)
@@ -91,11 +105,12 @@ GO
         private static string GenerateDataInsert(string columnType)
             => columnType switch
                {
-                   "int" => Rand.Next(int.MaxValue).ToString(),
-                   "smallint" => Rand.Next(short.MaxValue).ToString(),
-                   "bigint" => Rand.Next(int.MaxValue).ToString(),
+                   "int"          => Rand.Next(int.MaxValue).ToString(),
+                   "smallint"     => Rand.Next(short.MaxValue).ToString(),
+                   "bigint"       => Rand.Next(int.MaxValue).ToString(),
                    "varchar(255)" => $"'{Guid.NewGuid()}'",
-                   "bit" => Rand.Next(1) == 1 ? "0" : "1"
+                   "bit"          => Rand.Next(1) == 1 ? "0" : "1",
+                   _              => ""
                };
 
         private static string GenerateCheckDropCreateDatabase()
