@@ -62,10 +62,7 @@ namespace DatabaseGenerator
 
             File.WriteAllText(tableCreation, databaseAndTableCreationString);
 
-            // 80 rows 
-            // 15 columns
-            // 1200 datapoints
-            int numRowsOfDataToScriptPerBatch = Math.Min(1000, numRowsOfData * numColumnsPerTable); // 1000
+            int numRowsOfDataToScriptPerBatch = Math.Min(1000, numRowsOfData * numColumnsPerTable);
             if (numRowsOfDataToScriptPerBatch > 0)
             {
                 foreach (var generatedSet in generationData)
