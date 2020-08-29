@@ -1,7 +1,7 @@
 # DirtyDatabaseGenerator
 A quick-and-dirty C# program to create arbitrarily-sized databases with a configurable number of tables, indexes, columns, and rows of data - all randomized
 
-At the time of writing this programs runs against the following MSSQL instance:
+At the time of writing this program outputs SQL that can be ran against the following MSSQL version:
 
 SQL Server Management Studio						15.0.18206.0  
 Microsoft Analysis Services Client Tools						15.0.1567.0  
