@@ -37,7 +37,7 @@ namespace DatabaseGenerator
         /// <param name="numColumnsPerTable">Number of columns per table to generate</param>
         /// <param name="numIndexesPerTable">Number of indexes per table to generate</param>
         /// <param name="numRowsOfData">Number of rows of data per table to generate</param>
-        private static void Main(int numTables = 10, int numColumnsPerTable = 5, int numIndexesPerTable = 3, int numRowsOfData = 1)
+        private static void Main(int numTables = 2, int numColumnsPerTable = 17, int numIndexesPerTable = 3, int numRowsOfData = 81)
         {
             var names = new NameGenerator().RandomNames();
 
@@ -47,8 +47,8 @@ namespace DatabaseGenerator
                        .Select(s => new
                         {
                             s.tableName,
-                            s.tableCreationDetails.columnTypes,
-                            s.tableCreationDetails.columnNames,
+                            columnTypes = s.tableCreationDetails.columnTypes.Skip(1).ToArray(),
+                            columnNames = s.tableCreationDetails.columnNames.Skip(1).ToArray(),
                             tableScript = s.tableCreationDetails.table
                         })
                        .ToList();
@@ -62,24 +62,34 @@ namespace DatabaseGenerator
 
             File.WriteAllText(tableCreation, databaseAndTableCreationString);
 
-            int chunkSize = Convert.ToInt32(Math.Floor((double)numRowsOfData / numColumnsPerTable));
-            foreach (var generatedSet in generationData)
+            // 80 rows 
+            // 15 columns
+            // 1200 datapoints
+            int numRowsOfDataToScriptPerBatch = Math.Min(1000, numRowsOfData * numColumnsPerTable); // 1000
+            if (numRowsOfDataToScriptPerBatch > 0)
             {
-                var numLoopedIterations = chunkSize == 0 ? 0 : numRowsOfData / chunkSize;
-                for (int i = 0; i < numLoopedIterations; i++)
+                foreach (var generatedSet in generationData)
                 {
-                    var dataInsert = GenerateTableInsert(generatedSet.tableName, generatedSet.columnNames.Skip(1).ToArray(),
-                        generatedSet.columnTypes.Skip(1).ToArray(), chunkSize);
+                    var numLoopedIterations = Convert.ToInt32(Math.Floor(numRowsOfData * numColumnsPerTable / (double)numRowsOfDataToScriptPerBatch));
+                    for (int i = 0; i < numLoopedIterations; i++)
+                    {
+                        var dataInsert = GenerateTableInsert(generatedSet.tableName, generatedSet.columnNames,
+                            generatedSet.columnTypes, numRowsOfDataToScriptPerBatch);
 
-                    File.AppendAllText(dataSeed, dataInsert);
+                        File.AppendAllText(dataSeed, dataInsert);
+                    }
+
+                    var leftoverRowsToInsert = (numRowsOfData * numColumnsPerTable) % numRowsOfDataToScriptPerBatch;
+                    if (leftoverRowsToInsert > 0)
+                    {
+                        var finalInsert = GenerateTableInsert(generatedSet.tableName, generatedSet.columnNames,
+                                        generatedSet.columnTypes, leftoverRowsToInsert);
+
+                        File.AppendAllText(dataSeed, finalInsert); 
+                    }
                 }
 
-                var finalInsert= GenerateTableInsert(generatedSet.tableName, generatedSet.columnNames.Skip(1).ToArray(),
-                    generatedSet.columnTypes.Skip(1).ToArray(), numRowsOfData % 1000);
-
-                File.AppendAllText(dataSeed, finalInsert);
             }
-
             Process.StartProcess("notepad", tableCreation);
             Process.StartProcess("notepad", dataSeed);
         }
