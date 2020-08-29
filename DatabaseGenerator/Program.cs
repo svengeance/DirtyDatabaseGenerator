@@ -172,6 +172,10 @@ GO
 
         public IReadOnlyCollection<string> UsedNames() => _usedNames;
 
+        /// <summary>
+        /// Retrieves a near-infinite IEnumerable which will always enumerate a random string while it has values
+        /// </summary>
+        /// <returns></returns>
         public IEnumerable<string> RandomNames()
         {
             for (int i = 0; i < int.MaxValue; i++)
