@@ -1,0 +1,7 @@
+{
+  "profiles": {
+    "DbScriptGenerator": {
+      "commandName": "Project"
+    }
+  }
+}
