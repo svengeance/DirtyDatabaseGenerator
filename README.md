@@ -13,7 +13,7 @@ Operating System						10.0.18362
 
 ## Purpose
 This program is an extremely quick and minimal program that generates a database of arbitrary size for any kind of testing.
-It is nowhere near what I would call a sexy public API to be used regularly, but in a pinch it can certainl
+It is nowhere near what I would call a sexy public API to be used regularly, but in a pinch it can certainly
 service its purpose.
 
 ## How to use
